@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node name="serial_node" pkg="rosserial_python" type="serial_node.py">
+    <param name="port" type="string"  value="/dev/ttyUSB0"/>
+    <param name="baud" type="int" value="57600"/>
+  </node>
+
+  <node name="joint_receiver" pkg="robot_controller" type="joints_receive_from_arduino.py"/>
+  <node name="IMU_publisher" pkg="robot_controller" type="imu_publisher"/>
+
+  <!-- <node pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter_madgwick" output="screen" respawn="false" >
+    <param name="fixed_frame" value="odom" />
+    <param name="use_mag" value="false" />
+    <param name="use_magnetic_field_msg" value="false" />
+    <param name="publish_tf" value="false"/>
+    <remap from="imu/data_raw" to="imu_data"/>
+ </node> -->
+
+ <rosparam file="$(find robot_controller)/config/controllers_imu.yaml" command="load"/>  <rosparam file="$(find robot_controller)/config/joint_limits.yaml" command="load"/>
+
+  <include file="$(find myrobot)/launch/myrobot_descreption.launch"/>
+  
+  <node name="robot_hardware_interface" pkg="robot_controller" type="robot_hardware_interface_node" output="screen">
+     <remap from="/mobile_robot/mobile_base_controller/cmd_vel" to="/cmd_vel"/>
+      <remap from="/mobile_robot/mobile_base_controller/odom" to="/odom_noise"/>
+  </node>
+  
+
+  
+  <include file="$(find robot_controller)/launch/ekf.launch"/>
+
+  <!-- <node name="rviz" pkg="rviz" type="rviz" /> -->
+  
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
+        args="
+        	/mobile_robot/joints_update
+            /mobile_robot/mobile_base_controller" >
+  </node>
+  
+  <!--<node name="telop" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py"/>-->
+ 
+ 
+
+</launch>
